@@ -36,7 +36,7 @@
             this.labelDistancia = new System.Windows.Forms.Label();
             this.listBoxCaminhos = new System.Windows.Forms.ListBox();
             this.timerAnimacao = new System.Windows.Forms.Timer(this.components);
-            this.button1 = new System.Windows.Forms.Button();
+            this.labelMPos = new System.Windows.Forms.Label();
             this.panelMap = new hydra.PanelMap();
             this.SuspendLayout();
             // 
@@ -114,16 +114,15 @@
             this.timerAnimacao.Interval = 20;
             this.timerAnimacao.Tick += new System.EventHandler(this.timerAnimacao_Tick);
             // 
-            // button1
+            // labelMPos
             // 
-            this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.button1.Location = new System.Drawing.Point(464, 369);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 8;
-            this.button1.Text = "fe";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.labelMPos.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelMPos.AutoSize = true;
+            this.labelMPos.Location = new System.Drawing.Point(461, 200);
+            this.labelMPos.Name = "labelMPos";
+            this.labelMPos.Size = new System.Drawing.Size(63, 13);
+            this.labelMPos.TabIndex = 8;
+            this.labelMPos.Text = "MousePos: ";
             // 
             // panelMap
             // 
@@ -137,6 +136,7 @@
             this.panelMap.TabIndex = 7;
             this.panelMap.Paint += new System.Windows.Forms.PaintEventHandler(this.panelMap_Paint);
             this.panelMap.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panelMap_MouseDown);
+            this.panelMap.MouseMove += new System.Windows.Forms.MouseEventHandler(this.panelMap_MouseMove);
             this.panelMap.MouseUp += new System.Windows.Forms.MouseEventHandler(this.panelMap_MouseUp);
             // 
             // Form1
@@ -144,7 +144,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(600, 456);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.labelMPos);
             this.Controls.Add(this.panelMap);
             this.Controls.Add(this.listBoxCaminhos);
             this.Controls.Add(this.labelDistancia);
@@ -172,7 +172,7 @@
         private System.Windows.Forms.ListBox listBoxCaminhos;
         private System.Windows.Forms.Timer timerAnimacao;
         private PanelMap panelMap;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Label labelMPos;
     }
 }
 

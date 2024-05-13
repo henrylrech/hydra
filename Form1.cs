@@ -43,7 +43,7 @@ namespace hydra
         private int indiceCaminhoAtual = 0;
         private bool percorreTodos = false;
 
-        Func<double, double, double, double, double> calcularDistancia = (x1, y1, x2, y2) => Math.Sqrt(Math.Pow(x1 - x2, 2) + Math.Pow(y1 - y2, 2));
+        Func<float, float, float, float, float> calcularDistancia = (x1, y1, x2, y2) => (float)Math.Sqrt(Math.Pow(x1 - x2, 2) + Math.Pow(y1 - y2, 2));
         public Form1()
         {
             InitializeComponent();
@@ -67,27 +67,38 @@ namespace hydra
 
         private void btnProcessar_Click(object sender, EventArgs e)
         {
+            indexPonto = 0;
             listBoxCaminhos.Items.Clear();
             todosCaminhos.Clear();
             bpontos = false;
             blinhas = false;
             bprocessando = true;
             linhapontoid = 1;
-            for (int i=0; i<pontos.Count-1; i++)
+            for (int i = 0; i < pontos.Count - 1; i++)
             {
                 indexPonto = i;
                 linhapontoid = 0;
                 linhasVisitadas.Clear();
                 interseccoesEncontradas.Clear();
                 List<LinhasPonto> caminho = CalcularRota();
-                var distancia = CalcularDistanciaCaminho(caminho);
-                labelDistancia.Text = distancia.ToString();
-                todosCaminhos.Add(new Caminhos(caminho, distancia));
-                listBoxCaminhos.Items.Add(todosCaminhos.Count);
+                if (caminho != null)
+                {
+                    var distancia = CalcularDistanciaCaminho(caminho);
+                    labelDistancia.Text = distancia.ToString();
+                    todosCaminhos.Add(new Caminhos(caminho, distancia));
+                    listBoxCaminhos.Items.Add(todosCaminhos.Count);
+                }
             }
-            percorreTodos = true;
-            PercorreCaminho();
-            panelMap.Invalidate();
+            if (todosCaminhos.Count > 0)
+            {
+                percorreTodos = true;
+                PercorreCaminho();
+                panelMap.Invalidate();
+            }
+            else
+            {
+                bprocessando = false;
+            }
         }
 
         private void panelMap_MouseDown(object sender, MouseEventArgs e)
@@ -100,7 +111,10 @@ namespace hydra
             Point mousePos2 = new Point(e.X, e.Y);
             if (blinhas == true)
             {
-                linhas.Add(new Linhas(mousePos1, mousePos2));
+                if (mousePos1 != mousePos2)
+                {
+                    linhas.Add(new Linhas(mousePos1, mousePos2));
+                }
             }
             else if (bpontos == true)
             {
@@ -121,7 +135,7 @@ namespace hydra
         }
         private void DesenhaImagem(Graphics graphics)
         {
-            graphics.DrawImage(pessoa, imgPositionX - (imgSize/2), imgPositionY - (imgSize / 2), imgSize, imgSize);
+            graphics.DrawImage(pessoa, imgPositionX - (imgSize / 2), imgPositionY - (imgSize / 2), imgSize, imgSize);
         }
         private void DesenhaLinhas(Graphics graphics)
         {
@@ -184,14 +198,14 @@ namespace hydra
         private List<LinhasPonto> CalcularRota()
         {
             pontoMaisProximoInic = EncontrarPontoMaisProximo(indexPonto);
-            pontoMaisProximoFim = EncontrarPontoMaisProximo(indexPonto+1);
+            pontoMaisProximoFim = EncontrarPontoMaisProximo(indexPonto + 1);
             double dist2pts = calcularDistancia(pontos[indexPonto].X, pontos[indexPonto].Y, pontos[indexPonto + 1].X, pontos[indexPonto + 1].Y);
             double distptlin = calcularDistancia(pontos[indexPonto].X, pontos[indexPonto].Y, pontoMaisProximoInic.Ponto.X, pontoMaisProximoInic.Ponto.Y);
 
             List<LinhasPonto> caminho = new List<LinhasPonto>();
             if (dist2pts < distptlin)
             {
-                caminho.Add(new LinhasPonto(pontos[indexPonto+1], new Linhas(pontos[indexPonto], pontos[indexPonto+1])));
+                caminho.Add(new LinhasPonto(pontos[indexPonto + 1], new Linhas(pontos[indexPonto], pontos[indexPonto + 1])));
                 panelMap.Invalidate();
                 return caminho;
             }
@@ -418,7 +432,7 @@ namespace hydra
 
                 if (percorridos.Count > 0)
                 {
-                    if (percorridos[0].Linha.Ponto2 == pontoMaisProximoFim.Ponto) //achou
+                    if (percorridos[0].Linha.Ponto2 == pontoMaisProximoFim.Ponto && percorridos.Count == 1) //achou
                     {
                         todaslinhas.AddRange(percorridos);
                         achou = true;
@@ -427,7 +441,7 @@ namespace hydra
                         {
                             if (pontoMaisProximoFim.Ponto == linha.Ponto1 || pontoMaisProximoFim.Ponto == linha.Ponto2)
                             {
-                                fimDaRua = true; // pontomaispertofim esta no fim da rua             
+                                fimDaRua = true; // pontomaisproximofim esta no fim da rua             
                                 break;
                             }
                         }
@@ -438,12 +452,16 @@ namespace hydra
                         {
                             if (todaslinhas[i].Id == caminho.LastOrDefault().Parente)
                             {
-                                Linhas templin = new Linhas(todaslinhas[i].Linha.Ponto1, caminho.LastOrDefault().Linha.Ponto1);
-                                caminho.Add(new LinhasPonto(todaslinhas[i].Id, todaslinhas[i].Parente, todaslinhas[i].Ponto, templin));
-                                //caminho.Add(todaslinhas[i]);
+                                caminho.Add(new LinhasPonto(todaslinhas[i].Id, todaslinhas[i].Parente, todaslinhas[i].Ponto, new Linhas(todaslinhas[i].Linha.Ponto1, caminho.LastOrDefault().Linha.Ponto1)));
                                 i = 0;
                             }
+
+                            if (caminho.LastOrDefault().Parente == 0)
+                            {
+                                break;
+                            }
                         }
+
                         if (!fimDaRua)
                         {
                             caminho.RemoveAt(0);
@@ -459,24 +477,23 @@ namespace hydra
                                 {
                                     existe = true;
                                 }
-
                             }
-                            
                         }
 
                         if (!existe)
                         {
                             caminho.Insert(0, new LinhasPonto(new Linhas(new Point(pontoMaisProximoFim.Ponto.X, pontoMaisProximoFim.Ponto.Y), new Point(pontos[indexPonto + 1].X, pontos[indexPonto + 1].Y))));
                         }
-                        
+
                         caminho.Add(new LinhasPonto(new Linhas(new Point(pontos[indexPonto].X, pontos[indexPonto].Y), new Point(pontoMaisProximoInic.Ponto.X, pontoMaisProximoInic.Ponto.Y))));
                         caminho.Reverse();
                         int j = caminho.Count;
-                        for (int i=0; i<j; i++)
+                        for (int i = 0; i < j; i++)
                         {
                             if (caminho[i].Linha.Ponto1 == caminho[i].Linha.Ponto2)
                             {
                                 caminho.RemoveAt(i);
+                                i--;
                                 j--;
                             }
                         }
@@ -500,12 +517,11 @@ namespace hydra
         private List<LinhasPonto> RetornaInterseccoes(int id, LinhasPonto linhaAtual)
         {
             List<LinhasPonto> interseccoes = new List<LinhasPonto>();
-            //List<Point> pontosLinhaAtual = ObterPontosDaLinha(linhaAtual.Linha.Ponto1, linhaAtual.Linha.Ponto2);
             var teste = ObterPontoMaisProximo(linhaAtual.Linha, pontoMaisProximoFim.Ponto);
             teste = ChecaErroConversao(teste, pontoMaisProximoFim.Ponto);
             if (teste == pontoMaisProximoFim.Ponto)
             {
-                interseccoes.Add(new LinhasPonto(linhapontoid, id, pontoMaisProximoFim.Ponto, new Linhas(linhaAtual.Ponto, pontoMaisProximoFim.Ponto)));
+                interseccoes.Add(new LinhasPonto(linhapontoid, id, pontoMaisProximoFim.Ponto, new Linhas(linhaAtual.Linha.Ponto1, pontoMaisProximoFim.Ponto)));
                 linhapontoid++;
                 return interseccoes;
             }
@@ -549,6 +565,21 @@ namespace hydra
                                     linhapontoid++;
                                 }
                             }
+
+                            if (interseccoes.Count > 3)
+                            {
+                                Point ponto = ObterInterseccaoMaisProxima(linhaAtual);
+                                for (int i = 0; i < interseccoes.Count; i++)
+                                {
+                                    LinhasPonto interseccao = interseccoes[i];
+                                    if (interseccao.Linha.Ponto1 != ponto)
+                                    {
+                                        linhasVisitadas.Remove(linha);
+                                        interseccoes.Remove(interseccao);
+                                        i--;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -572,6 +603,11 @@ namespace hydra
 
         private double CalcularDistanciaCaminho(List<LinhasPonto> caminho)
         {
+            if (caminho == null)
+            {
+                return 0;
+            }
+
             double dist = 0;
             foreach (var rua in caminho)
             {
@@ -583,9 +619,12 @@ namespace hydra
         private void listBoxCaminhos_SelectedIndexChanged(object sender, EventArgs e)
         {
             indexPonto = listBoxCaminhos.SelectedIndex;
-            labelDistancia.Text = todosCaminhos[listBoxCaminhos.SelectedIndex].Distancia.ToString();
+            labelDistancia.Text = "Distancia: " + todosCaminhos[listBoxCaminhos.SelectedIndex].Distancia;
             percorreTodos = false;
-            PercorreCaminho();
+            if (todosCaminhos.Count > 0)
+            {
+                PercorreCaminho();
+            }
             panelMap.Invalidate();
         }
 
@@ -654,7 +693,7 @@ namespace hydra
             if (todosCaminhos[indiceCaminhoAtual].Caminho.Count > 0)
             {
                 linhaAtual = todosCaminhos[indiceCaminhoAtual].Caminho[indiceLinhaAtual];
-                
+
                 imgPositionX = linhaAtual.Linha.Ponto1.X;
                 imgPositionY = linhaAtual.Linha.Ponto1.Y;
                 float distancia = (float)Math.Sqrt(Math.Pow(linhaAtual.Linha.Ponto2.X - linhaAtual.Linha.Ponto1.X, 2) + Math.Pow(linhaAtual.Linha.Ponto2.Y - linhaAtual.Linha.Ponto1.Y, 2));
@@ -664,9 +703,30 @@ namespace hydra
             }
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void panelMap_MouseMove(object sender, MouseEventArgs e)
         {
-            PercorreCaminho();
+            labelMPos.Text = "MousePos: " + e.X + ", " + e.Y;
+        }
+
+        private Point ObterInterseccaoMaisProxima(LinhasPonto linhaAtual)
+        {
+            float menordist = 99999999;
+            Point ponto = new Point();
+            foreach (var linha in linhas)
+            {
+                var tuplaInt = EncontrarInterseccao(linhaAtual.Linha.Ponto1, linhaAtual.Linha.Ponto2, linha.Ponto1, linha.Ponto2);
+                if (tuplaInt != null)
+                {
+                    float dist1 = calcularDistancia(linha.Ponto1.X, linha.Ponto1.Y, linhaAtual.Linha.Ponto1.X, linhaAtual.Linha.Ponto1.Y);
+                    if (menordist > dist1)
+                    {
+                        menordist = dist1;
+                        ponto.X = tuplaInt.Item1;
+                        ponto.Y = tuplaInt.Item2;
+                    }
+                }
+            }
+            return ponto;
         }
     }
 }
