@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using static System.Windows.Forms.LinkLabel;
 
 namespace hydra
 {
@@ -83,7 +79,7 @@ namespace hydra
                 List<LinhasPonto> caminho = CalcularRota();
                 if (caminho != null)
                 {
-                    float distancia = CalcularDistanciaCaminho(caminho);
+                    float distancia = Functions.FuncoesMatematicas.CalcularDistanciaCaminho(caminho);
                     labelDistancia.Text = "Distancia: " + distancia.ToString();
                     todosCaminhos.Add(new Caminhos(caminho, distancia));
                     listBoxCaminhos.Items.Add(todosCaminhos.Count);
@@ -129,6 +125,11 @@ namespace hydra
             panelMap.Invalidate();
         }
 
+        private void panelMap_MouseMove(object sender, MouseEventArgs e)
+        {
+            labelMPos.Text = "MousePos: " + e.X + ", " + e.Y;
+        }
+
         private void panelMap_Paint(object sender, PaintEventArgs e)
         {
             DesenhaLinhas(e.Graphics);
@@ -139,10 +140,12 @@ namespace hydra
             }
             DesenhaImagem(e.Graphics);
         }
+
         private void DesenhaImagem(Graphics graphics)
         {
             graphics.DrawImage(pessoa, imgPositionX - (imgSize / 2), imgPositionY - (imgSize / 2), imgSize, imgSize);
         }
+
         private void DesenhaLinhas(Graphics graphics)
         {
             Pen pen = new Pen(Color.Black, 1);
@@ -203,8 +206,8 @@ namespace hydra
 
         private List<LinhasPonto> CalcularRota()
         {
-            pontoMaisProximoInic = EncontrarPontoMaisProximo(indexPonto);
-            pontoMaisProximoFim = EncontrarPontoMaisProximo(indexPonto + 1);
+            pontoMaisProximoInic = Functions.FuncoesMatematicas.EncontrarPontoMaisProximo(indexPonto, pontos, linhas);
+            pontoMaisProximoFim = Functions.FuncoesMatematicas.EncontrarPontoMaisProximo(indexPonto + 1, pontos, linhas);
             double dist2pts = calcularDistancia(pontos[indexPonto].X, pontos[indexPonto].Y, pontos[indexPonto + 1].X, pontos[indexPonto + 1].Y);
             double distptlin = calcularDistancia(pontos[indexPonto].X, pontos[indexPonto].Y, pontoMaisProximoInic.Ponto.X, pontoMaisProximoInic.Ponto.Y);
 
@@ -221,201 +224,13 @@ namespace hydra
             return caminho;
         }
 
-        public LinhasPonto EncontrarPontoMaisProximo(int n)
-        {
-            Point ponto = pontos[n];
-            double distanciamenor = 9999999;
-            LinhasPonto result = new LinhasPonto();
-            foreach (var linha in linhas)
-            {
-                Point pontoMaisProximo = ObterPontoMaisProximo(linha, ponto);
-                if (calcularDistancia(ponto.X, ponto.Y, pontoMaisProximo.X, pontoMaisProximo.Y) < distanciamenor)
-                {
-                    distanciamenor = calcularDistancia(ponto.X, ponto.Y, pontoMaisProximo.X, pontoMaisProximo.Y);
-                    result.Ponto = pontoMaisProximo;
-                    result.Linha = linha;
-                }
-            }
-            return result;
-        }
-
-        public static Point ObterPontoMaisProximo(Linhas linha, Point ponto)
-        {
-            var pontoA = linha.Ponto1;
-            var pontoB = linha.Ponto2;
-
-            var vetorAB = new Point(pontoB.X - pontoA.X, pontoB.Y - pontoA.Y);
-            var vetorAP = new Point(ponto.X - pontoA.X, ponto.Y - pontoA.Y);
-
-            var abDotab = Dot(vetorAB, vetorAB);
-            var abDotap = Dot(vetorAB, vetorAP);
-
-            // Evita a divisão para manter os valores como inteiros
-            var tNumerator = abDotap;
-            var tDenominator = abDotab;
-
-            // Compara diretamente os numeradores para evitar conversão para float
-            if (tNumerator < 0)
-            {
-                tNumerator = 0;
-            }
-            else if (tNumerator > tDenominator)
-            {
-                tNumerator = tDenominator;
-            }
-
-            // Calcula o ponto mais próximo usando apenas operações de inteiros
-            return new Point(pontoA.X + tNumerator * vetorAB.X / tDenominator,
-            pontoA.Y + tNumerator * vetorAB.Y / tDenominator);
-        }
-
-        private static int Dot(Point p1, Point p2)
-        {
-            return p1.X * p2.X + p1.Y * p2.Y;
-        }
-
-        public static List<Point> ObterPontosDaLinha(Point inicio, Point fim)
-        {
-            List<Point> pontos = new List<Point>();
-
-            int x = inicio.X;
-            int y = inicio.Y;
-            int dx = fim.X - inicio.X;
-            int dy = fim.Y - inicio.Y;
-
-            int ix = dx > 0 ? 1 : -1;
-            int iy = dy > 0 ? 1 : -1;
-            dx = Math.Abs(dx);
-            dy = Math.Abs(dy);
-
-            pontos.Add(new Point(x, y));
-
-            if (dx >= dy)
-            {
-                int erro = dx / 2;
-                while (x != fim.X)
-                {
-                    x += ix;
-                    erro -= dy;
-                    if (erro < 0)
-                    {
-                        y += iy;
-                        erro += dx;
-                    }
-                    pontos.Add(new Point(x, y));
-                }
-            }
-            else
-            {
-                int erro = dy / 2;
-                while (y != fim.Y)
-                {
-                    y += iy;
-                    erro -= dx;
-                    if (erro < 0)
-                    {
-                        x += ix;
-                        erro += dy;
-                    }
-                    pontos.Add(new Point(x, y));
-                }
-            }
-            return pontos;
-        }
-
-        public static Tuple<int, int> EncontrarInterseccao(Point p1, Point p2, Point p3, Point p4)
-        {
-            int x1 = p1.X;
-            int y1 = p1.Y;
-            int x2 = p2.X;
-            int y2 = p2.Y;
-            int x3 = p3.X;
-            int y3 = p3.Y;
-            int x4 = p4.X;
-            int y4 = p4.Y;
-
-            if (x1 == x3 && y1 == y3) // Pontos iniciais iguais não pode
-            {
-                return null;
-            }
-
-            // Verifica se algum dos segmentos é vertical
-            bool segmento1Vertical = x1 == x2;
-            bool segmento2Vertical = x3 == x4;
-
-            if (segmento1Vertical && segmento2Vertical)
-            {
-                return null; // Ambos os segmentos são verticais e paralelos
-            }
-
-            int xInterseccao;
-            int yInterseccao;
-
-            if (segmento1Vertical)
-            {
-                xInterseccao = x1;
-                yInterseccao = CalcularYInterseccao(xInterseccao, p3, p4);
-            }
-            else if (segmento2Vertical)
-            {
-                xInterseccao = x3;
-                yInterseccao = CalcularYInterseccao(xInterseccao, p1, p2);
-            }
-            else
-            {
-                // Calcula as inclinações e interceptações dos segmentos não verticais
-                double m1 = (double)(y2 - y1) / (x2 - x1);
-                double m2 = (double)(y4 - y3) / (x4 - x3);
-                double b1 = y1 - m1 * x1;
-                double b2 = y3 - m2 * x3;
-
-                // Verifica se as linhas são paralelas
-                if (m1 == m2)
-                {
-                    return null; // As linhas são paralelas e não se cruzam
-                }
-
-                // Encontra o ponto de intersecção das linhas infinitas
-                double xInterseccaoDouble = (b2 - b1) / (m1 - m2);
-                double yInterseccaoDouble = m1 * xInterseccaoDouble + b1;
-
-                xInterseccao = (int)Math.Round(xInterseccaoDouble);
-                yInterseccao = (int)Math.Round(yInterseccaoDouble);
-            }
-
-            // Verifica se o ponto de intersecção está dentro dos segmentos de linha
-            if (VerificarDentroDosSegmentos(xInterseccao, yInterseccao, x1, y1, x2, y2, x3, y3, x4, y4))
-            {
-                return Tuple.Create(xInterseccao, yInterseccao);
-            }
-
-            return null; // O ponto de intersecção não está dentro dos segmentos
-        }
-
-        private static int CalcularYInterseccao(int xInterseccao, Point p1, Point p2)
-        {
-            double m = (double)(p2.Y - p1.Y) / (p2.X - p1.X);
-            double b = p1.Y - m * p1.X;
-            return (int)Math.Round(m * xInterseccao + b);
-        }
-
-        private static bool VerificarDentroDosSegmentos(int xInterseccao, int yInterseccao, int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4)
-        {
-            bool dentroSegmento1 = xInterseccao + 1 >= Math.Min(x1, x2) && xInterseccao - 1 <= Math.Max(x1, x2);
-            bool dentroSegmento2 = xInterseccao + 1 >= Math.Min(x3, x4) && xInterseccao - 1 <= Math.Max(x3, x4);
-            bool dentroSegmento3 = yInterseccao + 1 >= Math.Min(y1, y2) && yInterseccao - 1 <= Math.Max(y1, y2);
-            bool dentroSegmento4 = yInterseccao + 1 >= Math.Min(y3, y4) && yInterseccao - 1 <= Math.Max(y3, y4);
-
-            return dentroSegmento1 && dentroSegmento2 && dentroSegmento3 && dentroSegmento4;
-        }
-
         private List<LinhasPonto> ResolveLabirinto(LinhasPonto lp)
         {
             List<LinhasPonto> percorridos = new List<LinhasPonto>();
             List<LinhasPonto> stack = new List<LinhasPonto>();
             List<LinhasPonto> todaslinhas = new List<LinhasPonto>();
             List<LinhasPonto> caminho = new List<LinhasPonto>();
-            List<Point> interseccoesFinal = ObterInterseccoesDaLinhaFinal();
+            List<Point> interseccoesFinal = Functions.FuncoesMatematicas.ObterInterseccoesDaLinhaFinal(pontoMaisProximoFim, linhas);
             bool achou = false;
             stack.Add(new LinhasPonto(linhapontoid, lp.Ponto, lp.Linha));
             todaslinhas.Add(stack[0]);
@@ -435,9 +250,6 @@ namespace hydra
 
                 if (percorridos.Count > 0)
                 {
-                    //se ponto1 é um ponto de int. linha final
-                    
-
                     if (percorridos[0].Linha.Ponto2 == pontoMaisProximoFim.Ponto && percorridos.Count == 1) //achou
                     {
                         todaslinhas.AddRange(percorridos);
@@ -525,8 +337,8 @@ namespace hydra
             List<LinhasPonto> interseccoes = new List<LinhasPonto>();
             
 
-            var teste = ObterPontoMaisProximo(linhaAtual.Linha, pontoMaisProximoFim.Ponto);
-            teste = ChecaErroConversao(teste, pontoMaisProximoFim.Ponto);
+            var teste = Functions.FuncoesMatematicas.ObterPontoMaisProximo(linhaAtual.Linha, pontoMaisProximoFim.Ponto);
+            teste = Functions.FuncoesMatematicas.ChecaErroConversao(teste, pontoMaisProximoFim.Ponto);
             if (teste == pontoMaisProximoFim.Ponto)
             {
                 interseccoes.Add(new LinhasPonto(linhapontoid, id, pontoMaisProximoFim.Ponto, new Linhas(linhaAtual.Linha.Ponto1, pontoMaisProximoFim.Ponto)));
@@ -538,13 +350,13 @@ namespace hydra
             {
                 if ((linhaAtual.Linha.Ponto1 != linha.Ponto1 || linhaAtual.Linha.Ponto2 != linha.Ponto2) && (!linhasVisitadas.Contains(linha) || (interseccoesEncontradas.Contains(linhaAtual.Linha.Ponto1) && linhaAtual.Linha.Ponto2 != linha.Ponto1)))
                 {
-                    var tuplaInt = EncontrarInterseccao(linhaAtual.Linha.Ponto1, linhaAtual.Linha.Ponto2, linha.Ponto1, linha.Ponto2);
+                    var tuplaInt = Functions.FuncoesMatematicas.EncontrarInterseccao(linhaAtual.Linha.Ponto1, linhaAtual.Linha.Ponto2, linha.Ponto1, linha.Ponto2);
                     if (tuplaInt != null)
                     {
-                        if (!interseccoesEncontradas.Contains(new Point(tuplaInt.Item1, tuplaInt.Item2)) && (!EstaDentroDaLinha(linha, linhaAtual.Linha) || interseccoesEncontradas.Contains(linhaAtual.Linha.Ponto1)))
+                        if (!interseccoesEncontradas.Contains(new Point(tuplaInt.Item1, tuplaInt.Item2)) && (!Functions.FuncoesMatematicas.EstaDentroDaLinha(linha, linhaAtual.Linha) || interseccoesEncontradas.Contains(linhaAtual.Linha.Ponto1)))
                         {
                             Point pontoInt = new Point(tuplaInt.Item1, tuplaInt.Item2);
-                            pontoInt = ChecaErroConversao(pontoInt, linhaAtual.Linha.Ponto2);
+                            pontoInt = Functions.FuncoesMatematicas.ChecaErroConversao(pontoInt, linhaAtual.Linha.Ponto2);
                             linhasVisitadas.Add(linha);
 
                             /*if (interseccoesFinal.Contains(pontoInt))
@@ -567,7 +379,7 @@ namespace hydra
 
                             if (pontoInt != linhaAtual.Linha.Ponto2)
                             {
-                                if (ObterPontosDaLinha(pontoInt, linhaAtual.Linha.Ponto1).Contains(linhaAtual.Ponto))
+                                if (Functions.FuncoesMatematicas.ObterPontosDaLinha(pontoInt, linhaAtual.Linha.Ponto1).Contains(linhaAtual.Ponto))
                                 {
                                     interseccoes.Add(new LinhasPonto(linhapontoid, id, linhaAtual.Linha.Ponto1, new Linhas(pontoInt, linhaAtual.Linha.Ponto1), linha));
                                     linhapontoid++;
@@ -581,12 +393,12 @@ namespace hydra
 
                             if (interseccoes.Count > 3)
                             {
-                                Point ponto = ObterInterseccaoMaisProxima(linhaAtual);
-                                ponto = ChecaErroConversao(ponto, linhaAtual.Linha.Ponto2);
+                                Point ponto = Functions.FuncoesMatematicas.ObterInterseccaoMaisProxima(linhaAtual, linhas);
+                                ponto = Functions.FuncoesMatematicas.ChecaErroConversao(ponto, linhaAtual.Linha.Ponto2);
                                 for (int i = 0; i < interseccoes.Count; i++)
                                 {
                                     LinhasPonto interseccao = interseccoes[i];
-                                    ponto = ChecaErroConversao(ponto, interseccao.Linha.Ponto1);
+                                    ponto = Functions.FuncoesMatematicas.ChecaErroConversao(ponto, interseccao.Linha.Ponto1);
                                     if (interseccao.Linha.Ponto1 != ponto)
                                     {
                                         linhasVisitadas.Remove(interseccao.LinhaPai);
@@ -603,35 +415,6 @@ namespace hydra
             return interseccoes;
         }
 
-        private static Point ChecaErroConversao(Point ponto, Point ponto2)
-        {
-            if (ponto.X + 1 == ponto2.X || ponto.X - 1 == ponto2.X)
-            {
-                ponto.X = ponto2.X;
-            }
-
-            if (ponto.Y + 1 == ponto2.Y || ponto.Y - 1 == ponto2.Y)
-            {
-                ponto.Y = ponto2.Y;
-            }
-            return ponto;
-        }
-
-        private float CalcularDistanciaCaminho(List<LinhasPonto> caminho)
-        {
-            if (caminho == null)
-            {
-                return 0;
-            }
-
-            float dist = 0;
-            foreach (var rua in caminho)
-            {
-                dist += calcularDistancia(rua.Linha.Ponto1.X, rua.Linha.Ponto1.Y, rua.Linha.Ponto2.X, rua.Linha.Ponto2.Y);
-            }
-            return dist;
-        }
-
         private void listBoxCaminhos_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (listBoxCaminhos.SelectedIndex != -1)
@@ -644,6 +427,32 @@ namespace hydra
                     PercorreCaminho();
                 }
                 panelMap.Invalidate();
+            }
+        }
+
+        private void PercorreCaminho()
+        {
+            if (percorreTodos)
+            {
+                indexPonto = 0;
+                indiceCaminhoAtual = 0;
+            }
+            else
+            {
+                indiceCaminhoAtual = indexPonto;
+            }
+
+            indiceLinhaAtual = 0;
+            if (todosCaminhos[indiceCaminhoAtual].Caminho.Count > 0)
+            {
+                linhaAtual = todosCaminhos[indiceCaminhoAtual].Caminho[indiceLinhaAtual];
+
+                imgPositionX = linhaAtual.Linha.Ponto1.X;
+                imgPositionY = linhaAtual.Linha.Ponto1.Y;
+                float distancia = (float)Math.Sqrt(Math.Pow(linhaAtual.Linha.Ponto2.X - linhaAtual.Linha.Ponto1.X, 2) + Math.Pow(linhaAtual.Linha.Ponto2.Y - linhaAtual.Linha.Ponto1.Y, 2));
+                passoX = ((linhaAtual.Linha.Ponto2.X - linhaAtual.Linha.Ponto1.X) / (distancia / imgSpeed));
+                passoY = ((linhaAtual.Linha.Ponto2.Y - linhaAtual.Linha.Ponto1.Y) / (distancia / imgSpeed));
+                timerAnimacao.Enabled = true;
             }
         }
 
@@ -694,89 +503,6 @@ namespace hydra
                     }
                 }
             }
-        }
-
-        private void PercorreCaminho()
-        {
-            if (percorreTodos)
-            {
-                indexPonto = 0;
-                indiceCaminhoAtual = 0;
-            }
-            else
-            {
-                indiceCaminhoAtual = indexPonto;
-            }
-
-            indiceLinhaAtual = 0;
-            if (todosCaminhos[indiceCaminhoAtual].Caminho.Count > 0)
-            {
-                linhaAtual = todosCaminhos[indiceCaminhoAtual].Caminho[indiceLinhaAtual];
-
-                imgPositionX = linhaAtual.Linha.Ponto1.X;
-                imgPositionY = linhaAtual.Linha.Ponto1.Y;
-                float distancia = (float)Math.Sqrt(Math.Pow(linhaAtual.Linha.Ponto2.X - linhaAtual.Linha.Ponto1.X, 2) + Math.Pow(linhaAtual.Linha.Ponto2.Y - linhaAtual.Linha.Ponto1.Y, 2));
-                passoX = ((linhaAtual.Linha.Ponto2.X - linhaAtual.Linha.Ponto1.X) / (distancia / imgSpeed));
-                passoY = ((linhaAtual.Linha.Ponto2.Y - linhaAtual.Linha.Ponto1.Y) / (distancia / imgSpeed));
-                timerAnimacao.Enabled = true;
-            }
-        }
-
-        private void panelMap_MouseMove(object sender, MouseEventArgs e)
-        {
-            labelMPos.Text = "MousePos: " + e.X + ", " + e.Y;
-        }
-
-        private Point ObterInterseccaoMaisProxima(LinhasPonto linhaAtual)
-        {
-            float menordist = 99999999;
-            Point ponto = new Point();
-            foreach (var linha in linhas)
-            {
-                var tuplaInt = EncontrarInterseccao(linhaAtual.Linha.Ponto1, linhaAtual.Linha.Ponto2, linha.Ponto1, linha.Ponto2);
-                if (tuplaInt != null)
-                {
-                    float dist1 = calcularDistancia(linha.Ponto1.X, linha.Ponto1.Y, linhaAtual.Linha.Ponto1.X, linhaAtual.Linha.Ponto1.Y);
-                    if (menordist > dist1)
-                    {
-                        menordist = dist1;
-                        ponto.X = tuplaInt.Item1;
-                        ponto.Y = tuplaInt.Item2;
-                    }
-                }
-            }
-            return ponto;
-        }
-
-        private static bool EstaDentroDaLinha(Linhas linha, Linhas linhaAtual)
-        {
-            Point p1 = ObterPontoMaisProximo(linha, linhaAtual.Ponto1);
-            p1 = ChecaErroConversao(p1, linhaAtual.Ponto1);
-            Point p2 = ObterPontoMaisProximo(linha, linhaAtual.Ponto2);
-            p2 = ChecaErroConversao(p2, linhaAtual.Ponto2);
-            if (p1 == linhaAtual.Ponto1 && p2 == linhaAtual.Ponto2)
-            {
-                return true;
-            }
-            return false;
-        }
-
-        private List<Point> ObterInterseccoesDaLinhaFinal()
-        {
-            Linhas linhaFinal = pontoMaisProximoFim.Linha;
-            List<Point> inter = new List<Point>();
-
-            foreach (var linha in linhas)
-            {
-                var tuplaInt = EncontrarInterseccao(linhaFinal.Ponto1, linhaFinal.Ponto2, linha.Ponto1, linha.Ponto2);
-                if (tuplaInt != null)
-                {
-                    Point pontoInt = new Point(tuplaInt.Item1, tuplaInt.Item2);
-                    pontoInt = ChecaErroConversao(pontoInt, linhaFinal.Ponto2);
-                    inter.Add(pontoInt);
-                }
-            }
-            return inter;
         }
     }
 }

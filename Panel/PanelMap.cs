@@ -12,7 +12,7 @@ namespace hydra
 {
     public partial class PanelMap : Panel
     {
-        public PanelMap()  
+        public PanelMap()
         {
             InitializeComponent();
             this.DoubleBuffered = true;

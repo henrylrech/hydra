@@ -46,19 +46,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Caminhos.cs" />
+    <Compile Include="Classes\Caminhos.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
-    <Compile Include="Linhas.cs" />
-    <Compile Include="LinhasPonto.cs" />
-    <Compile Include="PanelMap.cs">
+    <Compile Include="Classes\Linhas.cs" />
+    <Compile Include="Classes\LinhasPonto.cs" />
+    <Compile Include="Functions\FuncoesMatematicas.cs" />
+    <Compile Include="Panel\PanelMap.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="PanelMap.Designer.cs">
+    <Compile Include="Panel\PanelMap.Designer.cs">
       <DependentUpon>PanelMap.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
@@ -92,5 +93,6 @@
   <ItemGroup>
     <None Include="Resources\Sunglasses Emoji [Free Download Cool Emoji].png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
