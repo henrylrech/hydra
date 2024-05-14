@@ -83,8 +83,8 @@ namespace hydra
                 List<LinhasPonto> caminho = CalcularRota();
                 if (caminho != null)
                 {
-                    var distancia = CalcularDistanciaCaminho(caminho);
-                    labelDistancia.Text = distancia.ToString();
+                    float distancia = CalcularDistanciaCaminho(caminho);
+                    labelDistancia.Text = "Distancia: " + distancia.ToString();
                     todosCaminhos.Add(new Caminhos(caminho, distancia));
                     listBoxCaminhos.Items.Add(todosCaminhos.Count);
                 }
@@ -92,6 +92,12 @@ namespace hydra
             if (todosCaminhos.Count > 0)
             {
                 percorreTodos = true;
+                float distanciatotal = 0;
+                foreach (var caminho in todosCaminhos)
+                {
+                    distanciatotal += caminho.Distancia;
+                }
+                labelDistanciaTotal.Text = "Distancia Total: " + distanciatotal.ToString();
                 PercorreCaminho();
                 panelMap.Invalidate();
             }
@@ -366,10 +372,6 @@ namespace hydra
                 // Verifica se as linhas são paralelas
                 if (m1 == m2)
                 {
-                    if (p2 == p3)
-                    {
-                        return Tuple.Create(p2.X, p2.Y);
-                    }
                     return null; // As linhas são paralelas e não se cruzam
                 }
 
@@ -413,6 +415,7 @@ namespace hydra
             List<LinhasPonto> stack = new List<LinhasPonto>();
             List<LinhasPonto> todaslinhas = new List<LinhasPonto>();
             List<LinhasPonto> caminho = new List<LinhasPonto>();
+            List<Point> interseccoesFinal = ObterInterseccoesDaLinhaFinal();
             bool achou = false;
             stack.Add(new LinhasPonto(linhapontoid, lp.Ponto, lp.Linha));
             todaslinhas.Add(stack[0]);
@@ -432,6 +435,9 @@ namespace hydra
 
                 if (percorridos.Count > 0)
                 {
+                    //se ponto1 é um ponto de int. linha final
+                    
+
                     if (percorridos[0].Linha.Ponto2 == pontoMaisProximoFim.Ponto && percorridos.Count == 1) //achou
                     {
                         todaslinhas.AddRange(percorridos);
@@ -517,6 +523,8 @@ namespace hydra
         private List<LinhasPonto> RetornaInterseccoes(int id, LinhasPonto linhaAtual)
         {
             List<LinhasPonto> interseccoes = new List<LinhasPonto>();
+            
+
             var teste = ObterPontoMaisProximo(linhaAtual.Linha, pontoMaisProximoFim.Ponto);
             teste = ChecaErroConversao(teste, pontoMaisProximoFim.Ponto);
             if (teste == pontoMaisProximoFim.Ponto)
@@ -528,40 +536,45 @@ namespace hydra
 
             foreach (var linha in linhas)
             {
-                if ((linhaAtual.Linha.Ponto1 != linha.Ponto1 || linhaAtual.Linha.Ponto2 != linhaAtual.Linha.Ponto2) && (!linhasVisitadas.Contains(linha)))
+                if ((linhaAtual.Linha.Ponto1 != linha.Ponto1 || linhaAtual.Linha.Ponto2 != linha.Ponto2) && (!linhasVisitadas.Contains(linha) || (interseccoesEncontradas.Contains(linhaAtual.Linha.Ponto1) && linhaAtual.Linha.Ponto2 != linha.Ponto1)))
                 {
                     var tuplaInt = EncontrarInterseccao(linhaAtual.Linha.Ponto1, linhaAtual.Linha.Ponto2, linha.Ponto1, linha.Ponto2);
                     if (tuplaInt != null)
                     {
-                        if (!interseccoesEncontradas.Contains(new Point(tuplaInt.Item1, tuplaInt.Item2)))
+                        if (!interseccoesEncontradas.Contains(new Point(tuplaInt.Item1, tuplaInt.Item2)) && (!EstaDentroDaLinha(linha, linhaAtual.Linha) || interseccoesEncontradas.Contains(linhaAtual.Linha.Ponto1)))
                         {
                             Point pontoInt = new Point(tuplaInt.Item1, tuplaInt.Item2);
                             pontoInt = ChecaErroConversao(pontoInt, linhaAtual.Linha.Ponto2);
                             linhasVisitadas.Add(linha);
 
-                            interseccoesEncontradas.Add(pontoInt);
+                            /*if (interseccoesFinal.Contains(pontoInt))
+                            {
+                                interseccoes.Add(new LinhasPonto(linhapontoid, id, pontoMaisProximoFim.Ponto, new Linhas(pontoInt, pontoMaisProximoFim.Ponto)));
+                                linhapontoid++;
+                                return interseccoes;
+                            }*/
 
                             if (pontoInt != linha.Ponto1)
                             {
-                                interseccoes.Add(new LinhasPonto(linhapontoid, id, linha.Ponto1, new Linhas(pontoInt, linha.Ponto1)));
+                                interseccoes.Add(new LinhasPonto(linhapontoid, id, linha.Ponto1, new Linhas(pontoInt, linha.Ponto1), linha));
                                 linhapontoid++;
                             }
                             if (pontoInt != linha.Ponto2)
                             {
-                                interseccoes.Add(new LinhasPonto(linhapontoid, id, linha.Ponto2, new Linhas(pontoInt, linha.Ponto2)));
+                                interseccoes.Add(new LinhasPonto(linhapontoid, id, linha.Ponto2, new Linhas(pontoInt, linha.Ponto2), linha));
                                 linhapontoid++;
                             }
 
-                            if (pontoInt != linhaAtual.Linha.Ponto1 && pontoInt != linhaAtual.Linha.Ponto2)
+                            if (pontoInt != linhaAtual.Linha.Ponto2)
                             {
                                 if (ObterPontosDaLinha(pontoInt, linhaAtual.Linha.Ponto1).Contains(linhaAtual.Ponto))
                                 {
-                                    interseccoes.Add(new LinhasPonto(linhapontoid, id, linhaAtual.Linha.Ponto1, new Linhas(pontoInt, linhaAtual.Linha.Ponto1)));
+                                    interseccoes.Add(new LinhasPonto(linhapontoid, id, linhaAtual.Linha.Ponto1, new Linhas(pontoInt, linhaAtual.Linha.Ponto1), linha));
                                     linhapontoid++;
                                 }
                                 else
                                 {
-                                    interseccoes.Add(new LinhasPonto(linhapontoid, id, linhaAtual.Linha.Ponto2, new Linhas(pontoInt, linhaAtual.Linha.Ponto2)));
+                                    interseccoes.Add(new LinhasPonto(linhapontoid, id, linhaAtual.Linha.Ponto2, new Linhas(pontoInt, linhaAtual.Linha.Ponto2), linha));
                                     linhapontoid++;
                                 }
                             }
@@ -569,13 +582,16 @@ namespace hydra
                             if (interseccoes.Count > 3)
                             {
                                 Point ponto = ObterInterseccaoMaisProxima(linhaAtual);
+                                ponto = ChecaErroConversao(ponto, linhaAtual.Linha.Ponto2);
                                 for (int i = 0; i < interseccoes.Count; i++)
                                 {
                                     LinhasPonto interseccao = interseccoes[i];
+                                    ponto = ChecaErroConversao(ponto, interseccao.Linha.Ponto1);
                                     if (interseccao.Linha.Ponto1 != ponto)
                                     {
-                                        linhasVisitadas.Remove(linha);
+                                        linhasVisitadas.Remove(interseccao.LinhaPai);
                                         interseccoes.Remove(interseccao);
+                                        try { interseccoesEncontradas.Remove(interseccao.Linha.Ponto1); } catch { }
                                         i--;
                                     }
                                 }
@@ -587,7 +603,7 @@ namespace hydra
             return interseccoes;
         }
 
-        private Point ChecaErroConversao(Point ponto, Point ponto2)
+        private static Point ChecaErroConversao(Point ponto, Point ponto2)
         {
             if (ponto.X + 1 == ponto2.X || ponto.X - 1 == ponto2.X)
             {
@@ -601,14 +617,14 @@ namespace hydra
             return ponto;
         }
 
-        private double CalcularDistanciaCaminho(List<LinhasPonto> caminho)
+        private float CalcularDistanciaCaminho(List<LinhasPonto> caminho)
         {
             if (caminho == null)
             {
                 return 0;
             }
 
-            double dist = 0;
+            float dist = 0;
             foreach (var rua in caminho)
             {
                 dist += calcularDistancia(rua.Linha.Ponto1.X, rua.Linha.Ponto1.Y, rua.Linha.Ponto2.X, rua.Linha.Ponto2.Y);
@@ -618,14 +634,17 @@ namespace hydra
 
         private void listBoxCaminhos_SelectedIndexChanged(object sender, EventArgs e)
         {
-            indexPonto = listBoxCaminhos.SelectedIndex;
-            labelDistancia.Text = "Distancia: " + todosCaminhos[listBoxCaminhos.SelectedIndex].Distancia;
-            percorreTodos = false;
-            if (todosCaminhos.Count > 0)
+            if (listBoxCaminhos.SelectedIndex != -1)
             {
-                PercorreCaminho();
+                indexPonto = listBoxCaminhos.SelectedIndex;
+                labelDistancia.Text = "Distancia: " + todosCaminhos[listBoxCaminhos.SelectedIndex].Distancia;
+                percorreTodos = false;
+                if (todosCaminhos.Count > 0)
+                {
+                    PercorreCaminho();
+                }
+                panelMap.Invalidate();
             }
-            panelMap.Invalidate();
         }
 
         private void timerAnimacao_Tick(object sender, EventArgs e)
@@ -727,6 +746,37 @@ namespace hydra
                 }
             }
             return ponto;
+        }
+
+        private static bool EstaDentroDaLinha(Linhas linha, Linhas linhaAtual)
+        {
+            Point p1 = ObterPontoMaisProximo(linha, linhaAtual.Ponto1);
+            p1 = ChecaErroConversao(p1, linhaAtual.Ponto1);
+            Point p2 = ObterPontoMaisProximo(linha, linhaAtual.Ponto2);
+            p2 = ChecaErroConversao(p2, linhaAtual.Ponto2);
+            if (p1 == linhaAtual.Ponto1 && p2 == linhaAtual.Ponto2)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private List<Point> ObterInterseccoesDaLinhaFinal()
+        {
+            Linhas linhaFinal = pontoMaisProximoFim.Linha;
+            List<Point> inter = new List<Point>();
+
+            foreach (var linha in linhas)
+            {
+                var tuplaInt = EncontrarInterseccao(linhaFinal.Ponto1, linhaFinal.Ponto2, linha.Ponto1, linha.Ponto2);
+                if (tuplaInt != null)
+                {
+                    Point pontoInt = new Point(tuplaInt.Item1, tuplaInt.Item2);
+                    pontoInt = ChecaErroConversao(pontoInt, linhaFinal.Ponto2);
+                    inter.Add(pontoInt);
+                }
+            }
+            return inter;
         }
     }
 }

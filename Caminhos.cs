@@ -9,12 +9,12 @@ namespace hydra
     public class Caminhos
     {
         public List<LinhasPonto> Caminho { get; set; }
-        public double Distancia { get; set; }
+        public float Distancia { get; set; }
         public Caminhos ()
         {
 
         }
-        public Caminhos (List<LinhasPonto> caminho, double distancia)
+        public Caminhos (List<LinhasPonto> caminho, float distancia)
         {
             this.Caminho = caminho;
             this.Distancia = distancia;

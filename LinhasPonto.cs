@@ -13,6 +13,7 @@ namespace hydra
         public int Parente { get; set; }
         public Point Ponto { get; set; }
         public Linhas Linha { get; set; }
+        public Linhas LinhaPai { get; set; }
         public LinhasPonto()
         {
         }
@@ -39,6 +40,14 @@ namespace hydra
             this.Parente = parente;
             this.Ponto = point;
             this.Linha = linhas;
+        }
+        public LinhasPonto(int id, int parente, Point point, Linhas linhas, Linhas linhapai)
+        {
+            this.Id = id;
+            this.Parente = parente;
+            this.Ponto = point;
+            this.Linha = linhas;
+            this.LinhaPai = linhapai;
         }
 
     }

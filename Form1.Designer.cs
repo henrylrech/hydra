@@ -38,6 +38,7 @@
             this.timerAnimacao = new System.Windows.Forms.Timer(this.components);
             this.labelMPos = new System.Windows.Forms.Label();
             this.panelMap = new hydra.PanelMap();
+            this.labelDistanciaTotal = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // btnLinhas
@@ -92,7 +93,7 @@
             // 
             this.labelDistancia.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.labelDistancia.AutoSize = true;
-            this.labelDistancia.Location = new System.Drawing.Point(461, 395);
+            this.labelDistancia.Location = new System.Drawing.Point(461, 382);
             this.labelDistancia.Name = "labelDistancia";
             this.labelDistancia.Size = new System.Drawing.Size(57, 13);
             this.labelDistancia.TabIndex = 5;
@@ -139,11 +140,22 @@
             this.panelMap.MouseMove += new System.Windows.Forms.MouseEventHandler(this.panelMap_MouseMove);
             this.panelMap.MouseUp += new System.Windows.Forms.MouseEventHandler(this.panelMap_MouseUp);
             // 
+            // labelDistanciaTotal
+            // 
+            this.labelDistanciaTotal.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelDistanciaTotal.AutoSize = true;
+            this.labelDistanciaTotal.Location = new System.Drawing.Point(461, 395);
+            this.labelDistanciaTotal.Name = "labelDistanciaTotal";
+            this.labelDistanciaTotal.Size = new System.Drawing.Size(84, 13);
+            this.labelDistanciaTotal.TabIndex = 9;
+            this.labelDistanciaTotal.Text = "Distância Total: ";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(600, 456);
+            this.Controls.Add(this.labelDistanciaTotal);
             this.Controls.Add(this.labelMPos);
             this.Controls.Add(this.panelMap);
             this.Controls.Add(this.listBoxCaminhos);
@@ -156,6 +168,7 @@
             this.Margin = new System.Windows.Forms.Padding(2);
             this.MinimumSize = new System.Drawing.Size(604, 495);
             this.Name = "Form1";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "hydra";
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -173,6 +186,7 @@
         private System.Windows.Forms.Timer timerAnimacao;
         private PanelMap panelMap;
         private System.Windows.Forms.Label labelMPos;
+        private System.Windows.Forms.Label labelDistanciaTotal;
     }
 }
 
